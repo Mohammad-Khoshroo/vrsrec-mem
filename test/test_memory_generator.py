@@ -1,4 +1,4 @@
-"""Tests for src.memory_generator."""
+"""Tests for vrsrec_mem.memory_generator."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import random
 import tempfile
 import unittest
 
-from src.memory_generator import (
+from vrsrec_mem.memory_generator import (
     DEFAULT_MAX_CAPACITY,
     binary_to_hex,
     fill_value,
@@ -94,8 +94,9 @@ class TestGenerateMemoryDump(unittest.TestCase):
 
     def test_default_fill_x(self):
         mem = generate_memory_dump(4, 8, fill_mode="x")
-        self.assertEqual(mem, {0: "xxxxxxxx", 1: "xxxxxxxx",
-                                2: "xxxxxxxx", 3: "xxxxxxxx"})
+        self.assertEqual(
+            mem, {0: "xxxxxxxx", 1: "xxxxxxxx", 2: "xxxxxxxx", 3: "xxxxxxxx"}
+        )
 
     def test_fill_zero(self):
         mem = generate_memory_dump(3, 4, fill_mode="0")
@@ -103,8 +104,7 @@ class TestGenerateMemoryDump(unittest.TestCase):
 
     def test_merge_existing(self):
         existing = {1: "10101010", 2: "xxxxxxxx"}
-        mem = generate_memory_dump(4, 8, fill_mode="0",
-                                   existing_data=existing)
+        mem = generate_memory_dump(4, 8, fill_mode="0", existing_data=existing)
         # addr 0: not in existing -> fill 0
         self.assertEqual(mem[0], "00000000")
         # addr 1: from existing
@@ -116,9 +116,9 @@ class TestGenerateMemoryDump(unittest.TestCase):
 
     def test_merge_existing_no_normalize(self):
         existing = {1: "10x0"}
-        mem = generate_memory_dump(2, 4, fill_mode="0",
-                                   existing_data=existing,
-                                   normalize_x=False)
+        mem = generate_memory_dump(
+            2, 4, fill_mode="0", existing_data=existing, normalize_x=False
+        )
         self.assertEqual(mem[1], "10x0")  # preserved as-is
 
     def test_seed_reproducibility(self):
@@ -180,6 +180,7 @@ class TestReadWriteCsv(unittest.TestCase):
 # --------------------------------------------------------------------------- #
 # v1.2.0 additions: binary <-> hex conversion
 # --------------------------------------------------------------------------- #
+
 
 class TestBinaryToHex(unittest.TestCase):
     def test_basic_8bit(self):
@@ -260,6 +261,7 @@ class TestBinaryHexRoundtrip(unittest.TestCase):
 # v1.2.0 additions: base_address
 # --------------------------------------------------------------------------- #
 
+
 class TestBaseAddress(unittest.TestCase):
     def test_base_address_zero_default(self):
         mem = generate_memory_dump(4, 8, fill_mode="0")
@@ -273,7 +275,10 @@ class TestBaseAddress(unittest.TestCase):
     def test_base_address_with_existing_data(self):
         existing = {0x1001: "11111111"}
         mem = generate_memory_dump(
-            4, 8, fill_mode="0", base_address=0x1000,
+            4,
+            8,
+            fill_mode="0",
+            base_address=0x1000,
             existing_data=existing,
         )
         self.assertEqual(mem[0x1000], "00000000")
@@ -285,7 +290,10 @@ class TestBaseAddress(unittest.TestCase):
         # Existing data outside [base, base+capacity) should not appear.
         existing = {0x0000: "00000000", 0x1000: "11111111", 0x2000: "10101010"}
         mem = generate_memory_dump(
-            4, 8, fill_mode="0", base_address=0x1000,
+            4,
+            8,
+            fill_mode="0",
+            base_address=0x1000,
             existing_data=existing,
         )
         # Only addresses in [0x1000, 0x1004) should be present.
@@ -303,14 +311,13 @@ class TestBaseAddress(unittest.TestCase):
 # v1.2.0 additions: max_capacity safeguard
 # --------------------------------------------------------------------------- #
 
+
 class TestMaxCapacity(unittest.TestCase):
     def test_default_max_capacity_constant(self):
         self.assertEqual(DEFAULT_MAX_CAPACITY, 1 << 24)
 
     def test_capacity_under_max_ok(self):
-        mem = generate_memory_dump(
-            10, 8, fill_mode="0", max_capacity=100
-        )
+        mem = generate_memory_dump(10, 8, fill_mode="0", max_capacity=100)
         self.assertEqual(len(mem), 10)
 
     def test_capacity_over_max_raises(self):
@@ -326,14 +333,13 @@ class TestMaxCapacity(unittest.TestCase):
     def test_default_max_capacity_in_effect(self):
         # Capacity > DEFAULT_MAX_CAPACITY should raise by default.
         with self.assertRaises(ValueError):
-            generate_memory_dump(
-                DEFAULT_MAX_CAPACITY + 1, 8, fill_mode="0"
-            )
+            generate_memory_dump(DEFAULT_MAX_CAPACITY + 1, 8, fill_mode="0")
 
 
 # --------------------------------------------------------------------------- #
 # v1.2.0 additions: hex output format
 # --------------------------------------------------------------------------- #
+
 
 class TestFormatDataValue(unittest.TestCase):
     def test_bin_format(self):
@@ -364,8 +370,9 @@ class TestWriteMemoryCsvHex(unittest.TestCase):
 
     def test_hex_output_requires_data_bits(self):
         with self.assertRaises(ValueError):
-            write_memory_csv({0: "10101010"}, "/dev/null",
-                             output_format="hex")  # data_bits=None
+            write_memory_csv(
+                {0: "10101010"}, "/dev/null", output_format="hex"
+            )  # data_bits=None
 
     def test_bin_output_default(self):
         mem = {0: "10101010"}
@@ -380,6 +387,7 @@ class TestWriteMemoryCsvHex(unittest.TestCase):
 # --------------------------------------------------------------------------- #
 # v1.2.0 additions: read_sparse_csv with input_format
 # --------------------------------------------------------------------------- #
+
 
 class TestReadSparseCsvFormats(unittest.TestCase):
     def test_auto_detect_binary(self):
@@ -436,7 +444,7 @@ class TestReadSparseCsvFormats(unittest.TestCase):
             with open(path, "w") as f:
                 f.write("address,data\n")
                 f.write("0x0,10101010\n")  # 8 chars
-                f.write("0x1,1010\n")        # 4 chars, mismatch
+                f.write("0x1,1010\n")  # 4 chars, mismatch
             with self.assertRaises(ValueError):
                 read_sparse_csv(path, data_bits=8, input_format="bin")
 

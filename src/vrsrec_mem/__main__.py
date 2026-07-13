@@ -1,4 +1,4 @@
-"""Allow ``python -m src``."""
+"""Allow ``python -m vrsrec_mem``."""
 
 import sys
 

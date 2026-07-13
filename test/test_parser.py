@@ -1,11 +1,11 @@
-"""Tests for src.parser."""
+"""Tests for vrsrec_mem.parser."""
 
 from __future__ import annotations
 
 import io
 import unittest
 
-from src.parser import (
+from vrsrec_mem.parser import (
     parse_srecord_line,
     convert_srecord_string,
     convert_srecord_stream,
@@ -58,7 +58,7 @@ class TestParseSRecordLine(unittest.TestCase):
         self.assertEqual(parse_srecord_line("S70500000000FB", 1), "EOF")
 
     def test_s1_data_record(self):
-        line = make_s1(0x1234, b"\xDE\xAD\xBE\xEF")
+        line = make_s1(0x1234, b"\xde\xad\xbe\xef")
         result = parse_srecord_line(line, 1)
         self.assertEqual(result, (0x1234, "DEADBEEF"))
 
@@ -68,7 +68,7 @@ class TestParseSRecordLine(unittest.TestCase):
         self.assertEqual(result, (0x123456, "0102"))
 
     def test_s3_data_record(self):
-        line = make_s3(0x12345678, b"\xAA\xBB")
+        line = make_s3(0x12345678, b"\xaa\xbb")
         result = parse_srecord_line(line, 1)
         self.assertEqual(result, (0x12345678, "AABB"))
 
@@ -101,54 +101,75 @@ class TestParseSRecordLine(unittest.TestCase):
 
 class TestConvertSRecordString(unittest.TestCase):
     def test_basic_conversion(self):
-        text = "\n".join([
-            "S0030000FC",
-            make_s1(0x0000, b"\x11\x22\x33\x44"),
-            make_s1(0x0004, b"\x55\x66\x77\x88"),
-            "S9030000FC",
-        ])
+        text = "\n".join(
+            [
+                "S0030000FC",
+                make_s1(0x0000, b"\x11\x22\x33\x44"),
+                make_s1(0x0004, b"\x55\x66\x77\x88"),
+                "S9030000FC",
+            ]
+        )
         memory = convert_srecord_string(text, warn_on_overlap=False, err=io.StringIO())
-        self.assertEqual(memory, {
-            0x0000: "11", 0x0001: "22", 0x0002: "33", 0x0003: "44",
-            0x0004: "55", 0x0005: "66", 0x0006: "77", 0x0007: "88",
-        })
+        self.assertEqual(
+            memory,
+            {
+                0x0000: "11",
+                0x0001: "22",
+                0x0002: "33",
+                0x0003: "44",
+                0x0004: "55",
+                0x0005: "66",
+                0x0006: "77",
+                0x0007: "88",
+            },
+        )
 
     def test_eof_stops_parsing(self):
-        text = "\n".join([
-            make_s1(0x0000, b"\xAA"),
-            "S9030000FC",
-            make_s1(0x0010, b"\xBB"),  # should be ignored
-        ])
+        text = "\n".join(
+            [
+                make_s1(0x0000, b"\xaa"),
+                "S9030000FC",
+                make_s1(0x0010, b"\xbb"),  # should be ignored
+            ]
+        )
         memory = convert_srecord_string(text, warn_on_overlap=False, err=io.StringIO())
         self.assertEqual(memory, {0x0000: "AA"})
 
     def test_overlap_warning(self):
-        text = "\n".join([
-            make_s1(0x0000, b"\xAA"),
-            make_s1(0x0000, b"\xBB"),  # overwrite
-        ])
+        text = "\n".join(
+            [
+                make_s1(0x0000, b"\xaa"),
+                make_s1(0x0000, b"\xbb"),  # overwrite
+            ]
+        )
         err_buf = io.StringIO()
         memory = convert_srecord_string(text, warn_on_overlap=True, err=err_buf)
         self.assertEqual(memory[0x0000], "BB")
         self.assertIn("overwritten", err_buf.getvalue())
 
     def test_overlap_silenced(self):
-        text = "\n".join([
-            make_s1(0x0000, b"\xAA"),
-            make_s1(0x0000, b"\xBB"),
-        ])
+        text = "\n".join(
+            [
+                make_s1(0x0000, b"\xaa"),
+                make_s1(0x0000, b"\xbb"),
+            ]
+        )
         err_buf = io.StringIO()
         memory = convert_srecord_string(text, warn_on_overlap=False, err=err_buf)
         self.assertEqual(memory[0x0000], "BB")
         self.assertEqual(err_buf.getvalue(), "")
 
     def test_stream_vs_string_match(self):
-        text = "\n".join([
-            make_s1(0x0000, b"\x11\x22"),
-            make_s1(0x0004, b"\x33\x44"),
-            "S9030000FC",
-        ])
-        via_string = convert_srecord_string(text, warn_on_overlap=False, err=io.StringIO())
+        text = "\n".join(
+            [
+                make_s1(0x0000, b"\x11\x22"),
+                make_s1(0x0004, b"\x33\x44"),
+                "S9030000FC",
+            ]
+        )
+        via_string = convert_srecord_string(
+            text, warn_on_overlap=False, err=io.StringIO()
+        )
         via_stream = convert_srecord_stream(
             io.StringIO(text), warn_on_overlap=False, err=io.StringIO()
         )

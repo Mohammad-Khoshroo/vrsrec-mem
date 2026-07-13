@@ -34,7 +34,8 @@ Homepage = "https://github.com/Mohammad-Khoshroo/vrsrec-mem"
 Issues = "https://github.com/Mohammad-Khoshroo/vrsrec-mem/issues"
 
 [project.scripts]
-vrsrec-mem = "src.cli:main"
+vrsrec-mem = "vrsrec_mem.cli:main"
 
 [tool.setuptools]
-packages = ["src"]
+package-dir = {"" = "src"}
+packages = ["vrsrec_mem"]

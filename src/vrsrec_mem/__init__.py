@@ -1,5 +1,5 @@
 """
-src — Motorola S-Record to mem/txt/csv converter + memory
+vrsrec_mem — Motorola S-Record to mem/txt/csv converter + memory
 utilities for hardware simulation workflows.
 
 Public API:
@@ -35,15 +35,15 @@ Public API:
     write_grouped_csv(grouped_data, output_file, address_width)
 
 CLI entry point:
-    python -m src <command> [options]
+    python -m vrsrec_mem <command> [options]
 
     Commands:
         convert   Convert S-Record file to mem/txt/csv
         gen       Generate a fully-populated memory dump CSV
         group     Group a byte-addressed CSV into multi-byte words
 
-    Backward compat: `python -m src file.srec` is equivalent
-    to `python -m src convert file.srec`.
+    Backward compat: `python -m vrsrec_mem file.srec` is equivalent
+    to `python -m vrsrec_mem convert file.srec`.
 """
 
 from .parser import (

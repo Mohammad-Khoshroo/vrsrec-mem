@@ -1,4 +1,4 @@
-"""Tests for src.csv_grouper."""
+"""Tests for vrsrec_mem.csv_grouper."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import os
 import tempfile
 import unittest
 
-from src.csv_grouper import (
+from vrsrec_mem.csv_grouper import (
     group_bytes_to_words,  # backward-compat alias
     group_hex_to_words,
     read_byte_csv,
@@ -24,8 +24,9 @@ class TestGroupBytesToWordsLittleEndian(unittest.TestCase):
         # bytes [DE, AD, BE, EF] at addresses [0,1,2,3]
         # little-endian word value = 0xEFBEADDE
         byte_data = {0: "DE", 1: "AD", 2: "BE", 3: "EF"}
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="little", err=io.StringIO())
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=io.StringIO()
+        )
         self.assertEqual(len(result), 1)
         base, word_hex, decimal = result[0]
         self.assertEqual(base, 0)
@@ -35,11 +36,18 @@ class TestGroupBytesToWordsLittleEndian(unittest.TestCase):
 
     def test_multiple_groups_little_endian(self):
         byte_data = {
-            0: "11", 1: "22", 2: "33", 3: "44",
-            4: "55", 5: "66", 6: "77", 7: "88",
+            0: "11",
+            1: "22",
+            2: "33",
+            3: "44",
+            4: "55",
+            5: "66",
+            6: "77",
+            7: "88",
         }
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="little", err=io.StringIO())
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=io.StringIO()
+        )
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], (0, "44332211", 0x44332211))
         self.assertEqual(result[1], (4, "88776655", 0x88776655))
@@ -47,8 +55,9 @@ class TestGroupBytesToWordsLittleEndian(unittest.TestCase):
     def test_non_aligned_start(self):
         # If bytes start at addr 4, base should be 4 (already aligned).
         byte_data = {4: "11", 5: "22", 6: "33", 7: "44"}
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="little", err=io.StringIO())
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=io.StringIO()
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0][0], 4)
 
@@ -57,8 +66,9 @@ class TestGroupBytesToWordsLittleEndian(unittest.TestCase):
         # but offset 0 is missing -> warning + fill 00.
         byte_data = {1: "AA", 2: "BB", 3: "CC"}
         err_buf = io.StringIO()
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="little", err=err_buf)
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=err_buf
+        )
         self.assertEqual(len(result), 1)
         base, word_hex, decimal = result[0]
         self.assertEqual(base, 0)
@@ -69,9 +79,9 @@ class TestGroupBytesToWordsLittleEndian(unittest.TestCase):
     def test_strict_mode_raises(self):
         byte_data = {1: "AA", 2: "BB", 3: "CC"}  # missing offset 0
         with self.assertRaises(ValueError) as ctx:
-            group_hex_to_words(byte_data, group_size=4,
-                               endian="little", strict=True,
-                               err=io.StringIO())
+            group_hex_to_words(
+                byte_data, group_size=4, endian="little", strict=True, err=io.StringIO()
+            )
         self.assertIn("missing", str(ctx.exception))
 
 
@@ -80,8 +90,9 @@ class TestGroupBytesToWordsBigEndian(unittest.TestCase):
         # bytes [DE, AD, BE, EF] at addresses [0,1,2,3]
         # big-endian word value = 0xDEADBEEF
         byte_data = {0: "DE", 1: "AD", 2: "BE", 3: "EF"}
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="big", err=io.StringIO())
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="big", err=io.StringIO()
+        )
         self.assertEqual(len(result), 1)
         base, word_hex, decimal = result[0]
         self.assertEqual(base, 0)
@@ -92,11 +103,11 @@ class TestGroupBytesToWordsBigEndian(unittest.TestCase):
         # For both endians, int(word_hex, 16) must equal decimal.
         byte_data = {0: "11", 1: "22", 2: "33", 3: "44"}
         for endian in ("little", "big"):
-            result = group_hex_to_words(byte_data, group_size=4,
-                                        endian=endian, err=io.StringIO())
+            result = group_hex_to_words(
+                byte_data, group_size=4, endian=endian, err=io.StringIO()
+            )
             _, word_hex, decimal = result[0]
-            self.assertEqual(int(word_hex, 16), decimal,
-                             f"failed for endian={endian}")
+            self.assertEqual(int(word_hex, 16), decimal, f"failed for endian={endian}")
 
 
 class TestGroupBytesToWordsValidation(unittest.TestCase):
@@ -113,12 +124,19 @@ class TestGroupBytesToWordsGaps(unittest.TestCase):
     def test_gap_between_groups(self):
         # Two complete groups with a gap in between — both should be reported.
         byte_data = {
-            0: "11", 1: "22", 2: "33", 3: "44",
-            16: "55", 17: "66", 18: "77", 19: "88",
+            0: "11",
+            1: "22",
+            2: "33",
+            3: "44",
+            16: "55",
+            17: "66",
+            18: "77",
+            19: "88",
         }
         err_buf = io.StringIO()
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="little", err=err_buf)
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=err_buf
+        )
         # The empty group @8 should be skipped silently.
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0][0], 0)
@@ -129,8 +147,9 @@ class TestGroupBytesToWordsGaps(unittest.TestCase):
         # Only addresses 0,1 present (offsets 2,3 missing)
         byte_data = {0: "11", 1: "22"}
         err_buf = io.StringIO()
-        result = group_hex_to_words(byte_data, group_size=4,
-                                    endian="little", err=err_buf)
+        result = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=err_buf
+        )
         self.assertEqual(len(result), 1)
         base, word_hex, decimal = result[0]
         self.assertEqual(base, 0)
@@ -142,14 +161,16 @@ class TestGroupBytesToWordsGaps(unittest.TestCase):
 class TestGroupSize2(unittest.TestCase):
     def test_halfword_grouping_little(self):
         byte_data = {0: "DE", 1: "AD"}
-        result = group_hex_to_words(byte_data, group_size=2,
-                                    endian="little", err=io.StringIO())
+        result = group_hex_to_words(
+            byte_data, group_size=2, endian="little", err=io.StringIO()
+        )
         self.assertEqual(result, [(0, "ADDE", 0xADDE)])
 
     def test_halfword_grouping_big(self):
         byte_data = {0: "DE", 1: "AD"}
-        result = group_hex_to_words(byte_data, group_size=2,
-                                    endian="big", err=io.StringIO())
+        result = group_hex_to_words(
+            byte_data, group_size=2, endian="big", err=io.StringIO()
+        )
         self.assertEqual(result, [(0, "DEAD", 0xDEAD)])
 
 
@@ -165,8 +186,7 @@ class TestReadWriteCsv(unittest.TestCase):
 
             with open(path) as f:
                 reader = csv.DictReader(f)
-                self.assertEqual(reader.fieldnames,
-                                 ["address", "word-data", "decimal"])
+                self.assertEqual(reader.fieldnames, ["address", "word-data", "decimal"])
                 rows = list(reader)
             self.assertEqual(rows[0]["address"], "0x00000000")
             self.assertEqual(rows[0]["word-data"], "EFBEADDE")
@@ -204,6 +224,7 @@ class TestReadWriteCsv(unittest.TestCase):
 # v1.2.0 additions: variable-width input (word-level CSVs)
 # --------------------------------------------------------------------------- #
 
+
 class TestGroupHexWordsVariableWidth(unittest.TestCase):
     """Test that group_hex_to_words works with any hex string width, not
     just 2-char byte strings."""
@@ -213,8 +234,9 @@ class TestGroupHexWordsVariableWidth(unittest.TestCase):
         # halfwords: 0x1111, 0x2222, 0x3333, 0x4444
         # little-endian word: 0x4444333322221111
         hex_data = {0: "1111", 1: "2222", 2: "3333", 3: "4444"}
-        result = group_hex_to_words(hex_data, group_size=4,
-                                    endian="little", err=io.StringIO())
+        result = group_hex_to_words(
+            hex_data, group_size=4, endian="little", err=io.StringIO()
+        )
         self.assertEqual(len(result), 1)
         base, word_hex, decimal = result[0]
         self.assertEqual(base, 0)
@@ -226,8 +248,9 @@ class TestGroupHexWordsVariableWidth(unittest.TestCase):
         # words: 0xDEADBEEF, 0xCAFEBABE
         # little-endian combined: 0xCAFEBABEDEADBEEF
         hex_data = {0: "DEADBEEF", 1: "CAFEBABE"}
-        result = group_hex_to_words(hex_data, group_size=2,
-                                    endian="little", err=io.StringIO())
+        result = group_hex_to_words(
+            hex_data, group_size=2, endian="little", err=io.StringIO()
+        )
         self.assertEqual(len(result), 1)
         base, word_hex, decimal = result[0]
         self.assertEqual(word_hex, "CAFEBABEDEADBEEF")
@@ -236,8 +259,9 @@ class TestGroupHexWordsVariableWidth(unittest.TestCase):
     def test_word_level_big_endian(self):
         # Same input, big-endian: 0xDEADBEEFCAFEBABE
         hex_data = {0: "DEADBEEF", 1: "CAFEBABE"}
-        result = group_hex_to_words(hex_data, group_size=2,
-                                    endian="big", err=io.StringIO())
+        result = group_hex_to_words(
+            hex_data, group_size=2, endian="big", err=io.StringIO()
+        )
         self.assertEqual(result[0][1], "DEADBEEFCAFEBABE")
         self.assertEqual(result[0][2], 0xDEADBEEFCAFEBABE)
 
@@ -251,10 +275,10 @@ class TestGroupHexWordsVariableWidth(unittest.TestCase):
     def test_group_size_2_with_word_input(self):
         # 8-char words, group_size=2 -> 16-char output.
         hex_data = {0: "11223344", 1: "55667788"}
-        result = group_hex_to_words(hex_data, group_size=2,
-                                    endian="little", err=io.StringIO())
-        self.assertEqual(result, [(0, "5566778811223344",
-                                    0x5566778811223344)])
+        result = group_hex_to_words(
+            hex_data, group_size=2, endian="little", err=io.StringIO()
+        )
+        self.assertEqual(result, [(0, "5566778811223344", 0x5566778811223344)])
 
 
 class TestReadByteCsvWithWidth(unittest.TestCase):
@@ -294,7 +318,7 @@ class TestReadByteCsvWithWidth(unittest.TestCase):
             path = os.path.join(td, "in.csv")
             with open(path, "w") as f:
                 f.write("address,data\n")
-                f.write("0x0,DE\n")        # 2 chars
+                f.write("0x0,DE\n")  # 2 chars
                 f.write("0x1,DEADBEEF\n")  # 8 chars, mismatch
             with self.assertRaises(ValueError):
                 read_byte_csv(path, input_width=2)
@@ -315,14 +339,17 @@ class TestReadByteCsvWithWidth(unittest.TestCase):
 # v1.2.0 additions: backward-compat alias
 # --------------------------------------------------------------------------- #
 
+
 class TestBackwardCompatAlias(unittest.TestCase):
     def test_group_bytes_to_words_is_alias(self):
         # The old name should produce the same result as the new name.
         byte_data = {0: "DE", 1: "AD", 2: "BE", 3: "EF"}
-        result_old = group_bytes_to_words(byte_data, group_size=4,
-                                          endian="little", err=io.StringIO())
-        result_new = group_hex_to_words(byte_data, group_size=4,
-                                        endian="little", err=io.StringIO())
+        result_old = group_bytes_to_words(
+            byte_data, group_size=4, endian="little", err=io.StringIO()
+        )
+        result_new = group_hex_to_words(
+            byte_data, group_size=4, endian="little", err=io.StringIO()
+        )
         self.assertEqual(result_old, result_new)
 
 

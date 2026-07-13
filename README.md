@@ -58,9 +58,9 @@ pip install -e .
 ### Without installing — run as a module
 
 ```bash
-python -m src convert firmware.srec
-python -m src gen -c 256 -w 8 -f random
-python -m src group bytes.csv
+python -m vrsrec_mem convert firmware.srec
+python -m vrsrec_mem gen -c 256 -w 8 -f random
+python -m vrsrec_mem group bytes.csv
 ```
 
 ---
@@ -201,7 +201,7 @@ Commands:
 ## 📚 As a Python library
 
 ```python
-from src import (
+from vrsrec_mem import (
     convert_srecord_string, format_output,        # convert
     generate_memory_dump, write_memory_csv,       # gen
     group_bytes_to_words, write_grouped_csv,      # group
@@ -220,7 +220,7 @@ mem = generate_memory_dump(capacity=256, data_bits=8,
 write_memory_csv(mem, "mem.csv")
 
 # --- group ---
-from src import read_byte_csv
+from vrsrec_mem import read_byte_csv
 bytes_ = read_byte_csv("bytes.csv")
 grouped = group_bytes_to_words(bytes_, group_size=4, endian="little")
 write_grouped_csv(grouped, "words.csv")
@@ -296,9 +296,9 @@ python -m unittest discover -s tests -v
 
 ```
 vrsrec-mem/
-├── src/
+├── vrsrec_mem/
 │   ├── __init__.py            # public API
-│   ├── __main__.py            # python -m src
+│   ├── __main__.py            # python -m vrsrec_mem
 │   ├── parser.py              # S-Record parsing
 │   ├── formatter.py           # output formatting (mem/txt/csv)
 │   ├── memory_generator.py    # gen subcommand: memory dump generator
