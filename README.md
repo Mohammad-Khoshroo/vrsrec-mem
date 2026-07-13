@@ -2,11 +2,11 @@
 
 A small, dependency-free Python toolkit for working with **Motorola S-Record** files and **memory images** for hardware simulation. Three utilities in one package:
 
-| Command | What it does |
-|---------|--------------|
-| `convert` | Convert `.srec` / `.s19` / `.s28` / `.s37` files to Verilog `.mem`, `.txt`, or `.csv` |
+| Command   | What it does                                                                                                                       |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `convert` | Convert `.srec` / `.s19` / `.s28` / `.s37` files to Verilog `.mem`, `.txt`, or `.csv`                                              |
 | `gen`     | Generate a fully-populated memory dump CSV with fill patterns (`x`/`0`/`1`/`random`) — binary or hex output, optional base address |
-| `group`   | Group any fixed-width hex CSV into multi-element word groups (bytes → 32-bit words, words → 64-bit words, etc.) |
+| `group`   | Group any fixed-width hex CSV into multi-element word groups (bytes → 32-bit words, words → 64-bit words, etc.)                    |
 
 All three support both CLI use and a clean Python library API. **129 unit tests**, no runtime dependencies beyond Python 3.8+.
 
@@ -58,9 +58,9 @@ pip install -e .
 ### Without installing — run as a module
 
 ```bash
-python -m vrsrec_mem convert firmware.srec
-python -m vrsrec_mem gen -c 256 -w 8 -f random
-python -m vrsrec_mem group bytes.csv
+python -m src convert firmware.srec
+python -m src gen -c 256 -w 8 -f random
+python -m src group bytes.csv
 ```
 
 ---
@@ -153,7 +153,7 @@ Commands:
 ### `convert`
 
 | Option              | Description                                      |
-|---------------------|--------------------------------------------------|
+| ------------------- | ------------------------------------------------ |
 | `filename`          | Input S-Record file                              |
 | `--with-address`    | Include address in output                        |
 | `--quiet`           | Suppress overlap / padding warnings              |
@@ -169,39 +169,39 @@ Commands:
 
 ### `gen`
 
-| Option                   | Description                                                |
-|--------------------------|------------------------------------------------------------|
-| `-i, --input FILE`       | Optional sparse CSV to merge                               |
-| `-o, --output FILE`      | Output CSV file (default: `output.csv`)                    |
-| `-c, --capacity N`       | Total memory capacity (required)                           |
-| `-w, --width BITS`       | Data width in bits (default: 8)                            |
-| `-f, --fill MODE`        | `x` / `0` / `1` / `random` / `random_with_x` (default: `x`) |
-| `--seed N`               | Random seed for reproducibility                            |
-| `--base-address ADDR`    | First address (default: 0). Accepts `0x` hex.              |
-| `--hex-output`           | Hex string output (`$readmemh`). Default: binary (`$readmemb`) |
-| `--input-format FMT`     | `auto` / `bin` / `hex` for `--input` CSV (default: `auto`) |
-| `--max-capacity N`       | Soft safeguard (default: 16777216). `0` disables.          |
-| `-q, --quiet`            | Suppress status messages                                   |
+| Option                | Description                                                    |
+| --------------------- | -------------------------------------------------------------- |
+| `-i, --input FILE`    | Optional sparse CSV to merge                                   |
+| `-o, --output FILE`   | Output CSV file (default: `output.csv`)                        |
+| `-c, --capacity N`    | Total memory capacity (required)                               |
+| `-w, --width BITS`    | Data width in bits (default: 8)                                |
+| `-f, --fill MODE`     | `x` / `0` / `1` / `random` / `random_with_x` (default: `x`)    |
+| `--seed N`            | Random seed for reproducibility                                |
+| `--base-address ADDR` | First address (default: 0). Accepts `0x` hex.                  |
+| `--hex-output`        | Hex string output (`$readmemh`). Default: binary (`$readmemb`) |
+| `--input-format FMT`  | `auto` / `bin` / `hex` for `--input` CSV (default: `auto`)     |
+| `--max-capacity N`    | Soft safeguard (default: 16777216). `0` disables.              |
+| `-q, --quiet`         | Suppress status messages                                       |
 
 ### `group`
 
-| Option                | Description                                                |
-|-----------------------|------------------------------------------------------------|
-| `input`               | Input CSV file with `address,data` columns                 |
-| `-o, --output FILE`   | Output CSV file (default: `output_grouped.csv`)            |
-| `-s, --group-size N`  | Input elements per group (default: 4)                      |
-| `--input-width N`     | Force input hex-character width (default: auto-detect)     |
-| `--little-endian`     | Element at offset 0 is LSB (default)                       |
-| `--big-endian`        | Element at offset 0 is MSB                                 |
-| `--strict`            | Error instead of warn on incomplete/misaligned groups      |
-| `-q, --quiet`         | Suppress warnings and status messages                      |
+| Option               | Description                                            |
+| -------------------- | ------------------------------------------------------ |
+| `input`              | Input CSV file with `address,data` columns             |
+| `-o, --output FILE`  | Output CSV file (default: `output_grouped.csv`)        |
+| `-s, --group-size N` | Input elements per group (default: 4)                  |
+| `--input-width N`    | Force input hex-character width (default: auto-detect) |
+| `--little-endian`    | Element at offset 0 is LSB (default)                   |
+| `--big-endian`       | Element at offset 0 is MSB                             |
+| `--strict`           | Error instead of warn on incomplete/misaligned groups  |
+| `-q, --quiet`        | Suppress warnings and status messages                  |
 
 ---
 
 ## 📚 As a Python library
 
 ```python
-from vrsrec_mem import (
+from src import (
     convert_srecord_string, format_output,        # convert
     generate_memory_dump, write_memory_csv,       # gen
     group_bytes_to_words, write_grouped_csv,      # group
@@ -220,7 +220,7 @@ mem = generate_memory_dump(capacity=256, data_bits=8,
 write_memory_csv(mem, "mem.csv")
 
 # --- group ---
-from vrsrec_mem import read_byte_csv
+from src import read_byte_csv
 bytes_ = read_byte_csv("bytes.csv")
 grouped = group_bytes_to_words(bytes_, group_size=4, endian="little")
 write_grouped_csv(grouped, "words.csv")
@@ -296,9 +296,9 @@ python -m unittest discover -s tests -v
 
 ```
 vrsrec-mem/
-├── vrsrec_mem/
+├── src/
 │   ├── __init__.py            # public API
-│   ├── __main__.py            # python -m vrsrec_mem
+│   ├── __main__.py            # python -m src
 │   ├── parser.py              # S-Record parsing
 │   ├── formatter.py           # output formatting (mem/txt/csv)
 │   ├── memory_generator.py    # gen subcommand: memory dump generator
