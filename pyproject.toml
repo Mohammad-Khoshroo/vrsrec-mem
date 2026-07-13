@@ -30,8 +30,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-username/vrsrec-mem"
-Issues = "https://github.com/your-username/vrsrec-mem/issues"
+Homepage = "https://github.com/Mohammad-Khoshroo/vrsrec-mem"
+Issues = "https://github.com/Mohammad-Khoshroo/vrsrec-mem/issues"
 
 [project.scripts]
 vrsrec-mem = "src.cli:main"
