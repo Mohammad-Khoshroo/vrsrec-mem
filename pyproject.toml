@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vrsrec-mem"
+version = "1.2.0"
+description = "Convert Motorola S-Record files to Verilog .mem/.txt/.csv, generate memory dumps (bin/hex), and group hex CSVs into multi-byte words"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "vrsrec-mem contributors" },
+]
+keywords = ["srecord", "s-record", "motorola", "verilog", "mem", "firmware", "embedded"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/vrsrec-mem"
+Issues = "https://github.com/your-username/vrsrec-mem/issues"
+
+[project.scripts]
+vrsrec-mem = "src.cli:main"
+
+[tool.setuptools]
+packages = ["src"]
